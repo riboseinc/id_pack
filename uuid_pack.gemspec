@@ -1,4 +1,5 @@
 # coding: utf-8
+
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'uuid_pack/version'
@@ -9,8 +10,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Ribose Inc."]
   spec.email         = ["open.source@ribose.com"]
 
-  spec.summary       = %q{Compression and packing methods for singular and collection UUIDs.}
-  spec.description   = %q{Compression and packing methods for singular and collection UUIDs.}
+  spec.summary       = 'Compression and packing methods for singular and collection UUIDs.'
+  spec.description   = 'Compression and packing methods for singular and collection UUIDs.'
   spec.homepage      = "https://www.ribose.com"
   spec.license       = "MIT"
 

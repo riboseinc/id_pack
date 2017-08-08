@@ -5,25 +5,23 @@ module UuidPack
   # calculate bits in number
   def binPow(num)
     pow = 0
-    until num >> pow == 0
-      pow += 1 
-    end
+    pow += 1 until num >> pow == 0
     pow
   end
 
-  #transform string of valid characters to useful array (del = true if we need delimiter)
-  def alptoArr alpStr, del
-    alpArr = Array.new
+  # transform string of valid characters to useful array (del = true if we need delimiter)
+  def alptoArr(alpStr, del)
+    alpArr = []
     el = alpStr.length
     # max number of bits coding by one character (some characters will be one bit less)
     pow = binPow (el - 1)
     # how many characters will be one bit less
-    lowhi = 2 ** pow - el
+    lowhi = 2**pow - el
     # if delimited we can't use last characters
     if del
       el -= 1
       pow = binPow (el - 1)
-      lowhi = 2 ** pow - el
+      lowhi = 2**pow - el
       lowhi = -1 if lowhi == 0
       # first element include main data about alphabet and delimiter character
       alpArr.push [lowhi, alpStr[el], pow]
@@ -48,7 +46,7 @@ module UuidPack
   end
 
   # compress UUIDs array
-  def alpCompress arr, alpStr, order
+  def alpCompress(arr, alpStr, order)
     # length of UUID in bits
     lenU = 128
 
@@ -63,29 +61,29 @@ module UuidPack
     # loop by UUIDs
     arr.each do |item|
       # remove '-' characters from UUID
-      curr = item.gsub('-', '').to_i(base=16)
+      curr = item.delete('-').to_i(base = 16)
       # get base binary code (BBC)
       achr += (curr << rest)
       # look for number of bits in BBC
-      rest = rest + lenU
-      # create symbols to compressed string 
+      rest += lenU
+      # create symbols to compressed string
       until rest < pow
-        powC = pow -1
-        code = ((achr & (2 ** powC - 1)) + 2 ** powC).to_s(2).reverse.to_i(base=2) >> 1
+        powC = pow - 1
+        code = ((achr & (2**powC - 1)) + 2**powC).to_s(2).reverse.to_i(base = 2) >> 1
         powC += 1 if code >= lowhi
         # decrease number of bits in BBC
         rest -= powC
         # get reverse bits from the end of BBC to create new symbol
-        code = ((achr & (2 ** powC - 1)) + 2 ** powC).to_s(2).reverse.to_i(base=2) >> 1
+        code = ((achr & (2**powC - 1)) + 2**powC).to_s(2).reverse.to_i(base = 2) >> 1
         # add new symbol
         nresult += alpArr.assoc(code)[1]
         # remove used bits from BBC
-        achr >>= powC 
+        achr >>= powC
       end
     end
     # check if we have tail of BBC
     if rest > 0
-      code = ((achr & (2 ** rest - 1)) + 2 ** rest).to_s(2).reverse.to_i(base=2) >> 1
+      code = ((achr & (2**rest - 1)) + 2**rest).to_s(2).reverse.to_i(base = 2) >> 1
       code <<= pow - rest - 1
       code <<= 1 if code >= lowhi
       # add tail symbol
@@ -104,33 +102,33 @@ module UuidPack
       # loop by UUIDs
       arr.each do |item|
         # remove '-' characters from UUID
-        curr = item.gsub('-', '').to_i(base=16)
+        curr = item.delete('-').to_i(base = 16)
         # calculate delta
         curr -= prev
-        prev = item.gsub('-', '').to_i(base=16)
+        prev = item.delete('-').to_i(base = 16)
         binlog = binPow curr
         binlog = lenU if binlog >= lenU - pow
         # get BBC for only current UUID
         achr = curr
         # look for number of bits in BBC (also for only current UUID)
         rest = binlog
-        # create symbols to compressed string 
+        # create symbols to compressed string
         until rest < pow
-          powC = pow -1
-          code = ((achr & (2 ** powC - 1)) + 2 ** powC).to_s(2).reverse.to_i(base=2) >> 1
+          powC = pow - 1
+          code = ((achr & (2**powC - 1)) + 2**powC).to_s(2).reverse.to_i(base = 2) >> 1
           powC += 1 if code >= lowhi
           # decrease number of bits in BBC
           rest -= powC
           # get reverse bits from the end of BBC to create new symbol
-          code = ((achr & (2 ** powC - 1)) + 2 ** powC).to_s(2).reverse.to_i(base=2) >> 1
+          code = ((achr & (2**powC - 1)) + 2**powC).to_s(2).reverse.to_i(base = 2) >> 1
           # add new symbol
           dresult += alpArr.assoc(code)[1]
           # remove used bits from BBC
-          achr >>= powC 
+          achr >>= powC
         end
         # check if we have tail of BBC for current UUID
         if rest > 0
-          code = ((achr & (2 ** rest - 1)) + 2 ** rest).to_s(2).reverse.to_i(base=2) >> 1
+          code = ((achr & (2**rest - 1)) + 2**rest).to_s(2).reverse.to_i(base = 2) >> 1
           code <<= pow - rest - 1
           code <<= 1 if code >= lowhi
           # add tail symbol for current UUID
@@ -141,7 +139,7 @@ module UuidPack
       end
     else
       order = true
-    end	
+    end
     result = nresult
     # get better result or non delta if we need to keep order
     result = dresult if dresult.length < nresult.length && !order
@@ -149,14 +147,14 @@ module UuidPack
   end
 
   # decompress UUIDs array
-  def alpDecompress str, alpStr
+  def alpDecompress(str, alpStr)
     # length of UUID in bits
     lenU = 128
 
-    result = Array.new
+    result = []
     alpArr = alptoArr alpStr, false
     # check if delta used when compress
-    if alpArr.rassoc(str[0])[0] & (2 ** (alpArr.rassoc(str[0])[2] - 1)) != 0
+    if alpArr.rassoc(str[0])[0] & (2**(alpArr.rassoc(str[0])[2] - 1)) != 0
       # delta used
       alpArr = alptoArr alpStr, true
       pow = alpArr[0][2]
@@ -172,10 +170,10 @@ module UuidPack
           # if BBC length than we need to look to current symbol one more time if it is delimiter
           item -= 1 if rest >= lenU
           # calculate UUID from delta
-          achr +=prev
+          achr += prev
           prev = achr
           # transform UUID to hexadecimal
-          curr = (prev).to_s(16)
+          curr = prev.to_s(16)
           # add first characters if UUID start with 0
           curr = '0' * (lenU / 4 - curr.length) + curr
           # add '-' characters from UUID
@@ -185,10 +183,10 @@ module UuidPack
           achr = 0
           rest = 0
         else
-          # if we become last symbol we need no to symbol processing 
+          # if we become last symbol we need no to symbol processing
           if item < str.length
             # reverse symbol code to BBC bits
-            code = (alpArr.rassoc(str[item])[0] + 2 ** alpArr.rassoc(str[item])[2]).to_s(2).reverse.to_i(base=2) >> 1
+            code = (alpArr.rassoc(str[item])[0] + 2**alpArr.rassoc(str[item])[2]).to_s(2).reverse.to_i(base = 2) >> 1
             # add bits to BBC
             achr += code << rest
             # look for number of bits in BBC
@@ -210,7 +208,7 @@ module UuidPack
       # loop by symbols of compressed string
       while item < str.length
         # reverse symbol code to BBC bits
-        code = (alpArr.rassoc(str[item])[0] + 2 ** alpArr.rassoc(str[item])[2]).to_s(2).reverse.to_i(base=2) >> 1
+        code = (alpArr.rassoc(str[item])[0] + 2**alpArr.rassoc(str[item])[2]).to_s(2).reverse.to_i(base = 2) >> 1
         # add bits to BBC
         achr += code << rest
         # look for number of bits in BBC
@@ -227,7 +225,7 @@ module UuidPack
           # calculate number of bits in BBC
           rest -= lenU
           # transform UUID to hexadecimal
-          curr = (achr & (2 ** lenU - 1)).to_s(16)
+          curr = (achr & (2**lenU - 1)).to_s(16)
           # add first characters if UUID start with 0
           curr = '0' * (lenU / 4 - curr.length) + curr
           # add '-' characters from UUID
@@ -237,7 +235,7 @@ module UuidPack
           # remove used bits from BBC
           achr >>= lenU
         end
-        item +=1
+        item += 1
       end
     end
     result
