@@ -1,5 +1,6 @@
 require "uuid_pack/version"
 
+# Based on work by Oleksandr Korniienko
 module UuidPack
 
   # calculate bits in number
