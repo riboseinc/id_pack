@@ -245,15 +245,13 @@ module UuidPack
           curr = '0' * (uuid_bit_length / 4 - curr.length) + curr
 
           # add '-' characters from UUID
-          if uuid_bit_length == 128
-            curr = [
-              curr[0..7],
-              curr[8..11],
-              curr[12..15],
-              curr[16..19],
-              curr[20..31],
-            ].join('-')
-          end
+          curr = [
+            curr[0..7],
+            curr[8..11],
+            curr[12..15],
+            curr[16..19],
+            curr[20..31],
+          ].join('-')
 
           # add new UUID to array
           result.push curr
@@ -330,15 +328,13 @@ module UuidPack
           curr = '0' * (uuid_bit_length / 4 - curr.length) + curr
 
           # add '-' characters from UUID
-          if uuid_bit_length == 128
-            curr = [
-              curr[0..7],
-              curr[8..11],
-              curr[12..15],
-              curr[16..19],
-              curr[20..31],
-            ].join('-')
-          end
+          curr = [
+            curr[0..7],
+            curr[8..11],
+            curr[12..15],
+            curr[16..19],
+            curr[20..31],
+          ].join('-')
 
           # add new UUID to array
           result.push curr
