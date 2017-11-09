@@ -1,5 +1,5 @@
 require "bundler/setup"
-require "uuid_pack"
+require "id_pack"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
