@@ -2,16 +2,16 @@
 
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'uuid_pack/version'
+require 'id_pack/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "uuid_pack"
-  spec.version       = UuidPack::VERSION
+  spec.name          = "id_pack"
+  spec.version       = IdPack::VERSION
   spec.authors       = ["Ribose Inc."]
   spec.email         = ["open.source@ribose.com"]
 
-  spec.summary       = 'Compression and packing methods for singular and collection UUIDs.'
-  spec.description   = 'Compression and packing methods for singular and collection UUIDs.'
+  spec.summary       = 'Compression and packing methods for singular and collection IDs and UUIDs.'
+  spec.description   = 'Compression and packing methods for singular and collection IDs and UUIDs.'
   spec.homepage      = "https://www.ribose.com"
   spec.license       = "MIT"
 

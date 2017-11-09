@@ -1,11 +1,9 @@
 require "spec_helper"
 
-RSpec.describe UuidPack do
+RSpec.describe IdPack::UuidPacker do
 
   let(:packer) do
-    Class.new do
-      include UuidPack
-    end.new
+    described_class.new
   end
 
   shared_examples_for 'uuid' do
