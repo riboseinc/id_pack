@@ -101,18 +101,18 @@
 
     /**
      * [1,2,3,6,7,8]
-     * => [UuidPack.range(start: 1 length: 3), UuidPack.range(start: 6 length: 3)]
+     * => [IdPack.range(start: 1 length: 3), IdPack.range(start: 6 length: 3)]
      */
     convertNumbersToRanges: function (numbers) {
       var ranges = [];
       if (numbers.length > 0) {
-        var range = new UuidPack.range(numbers[0], 1);
+        var range = new IdPack.range(numbers[0], 1);
         for (var i = 1; i < numbers.length; i++) {
           if (numbers[i] == numbers[i-1]+1) {
             range.length = range.length + 1;
           } else {
             ranges.push(range);
-            range = new UuidPack.range(numbers[i], 1);
+            range = new IdPack.range(numbers[i], 1);
           }
         }
         ranges.push(range);
@@ -121,7 +121,7 @@
     },
 
     /**
-     * [UuidPack.range(start: 1 length: 3), UuidPack.range(start: 6 length: 3)]
+     * [IdPack.range(start: 1 length: 3), IdPack.range(start: 6 length: 3)]
      * => "11100111"
      */
     convertRangesToBinaryNumber: function (ranges) {

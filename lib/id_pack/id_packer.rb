@@ -11,7 +11,7 @@ module IdPack
 #
 #     Example:
 #
-#       UuidPack::IdPacker.encode([5, 6, 21, 23, 25]) # => "_F~C_P.V"
+#       IdPack::IdPacker.encode([5, 6, 21, 23, 25]) # => "_F~C_P.V"
 #
 #   decode:
 #     mainly used by the server to convert the compressed string back into
@@ -19,7 +19,7 @@ module IdPack
 #
 #       Example:
 #
-#         UuidPack::IdPacker.decode("_F~C_P.V") # => [5, 6, 21, 23, 25]
+#         IdPack::IdPacker.decode("_F~C_P.V") # => [5, 6, 21, 23, 25]
 
   class IdPacker
 
