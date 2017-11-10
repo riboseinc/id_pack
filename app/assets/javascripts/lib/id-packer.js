@@ -18,12 +18,12 @@
  *
  * Examples:
  *
- * // encrypt the items in an Array
+ * // encode the items in an Array
  * var collection = [5, 6, 21, 23, 25];
  * IdPacker.encodeHashKeys(collection);
  * => "_E~C_O.V"
  *
- * // encrypt the keys of an Object
+ * // encode the keys of an Object
  * var collection = {
  *   5: "a",
  *   6: "b",
