@@ -1,67 +1,212 @@
-[[idpack]]
-IdPack
-------
+= id_pack
 
 image:https://img.shields.io/gem/v/id_pack.svg[
 	Gem Version, link="https://rubygems.org/gems/id_pack"]
 image:https://img.shields.io/travis/riboseinc/id_pack/master.svg[
 	Build Status, link="https://travis-ci.org/riboseinc/id_pack"]
 image:https://api.codeclimate.com/v1/badges/655d7aa547daa7b45148/maintainability[
-	"Code Climate", link="https://codeclimate.com/github/riboseinc/id_pack/maintainability"]
+	"Code Climate - Maintainability", link="https://codeclimate.com/github/riboseinc/id_pack/maintainability"]
 image:https://img.shields.io/codecov/c/github/riboseinc/id_pack.svg[
 	"Test Coverage", link="https://codecov.io/gh/riboseinc/id_pack"]
 
-TODO: Add introduction
+== Introduction
 
-[[installation]]
-Installation
-~~~~~~~~~~~~
+This gem provides functionality to compress and decompress two different types
+of objects:
 
-Add this line to your application’s Gemfile:
+1. a contiguous range or multiple contiguous ranges of integer ID
+2. a set of UUID
+
+as a single string.
+
+Both Ruby and Javascript implementations are provided.
+
+Javascript support for Rails is provided by means of a Rails engine (`IdPack::Engine`).
+
+Further, for integer ID ranges, it provides serialization of a concept called
+`sync_str`, which stands for "synchronization string".
+
+`sync_str` represents a mapping from ID to timestamp.
+It is typically generated on the client side for the server side.
+Armed with the `sync_str`, the server knows which objects the client requires,
+by comparing the timestamps from the `sync_str` with the update times of the
+corresponding objects from the database, so synchronization could be done with
+minimal waste of bandwidth.
+
+Timestamps are really just integers, _e.g._ `Time.now.to_i`.
+
+
+== Installation
+
+There are at least two ways to install this:
+
+A. The quickest way is to `gem install` on the terminal:
++
+[source,bash]
+....
+gem install id_pack
+....
+
+B. If your application has a `Gemfile`, add the following line:
++
+[source,ruby]
+....
+gem 'id_pack'
+....
++
+And then execute:
++
+[source,bash]
+....
+bundle
+....
+
+== Usage
+
+To experiment with the code, run `bin/console` for an interactive prompt.
 
 [source,ruby]
 ----
-gem 'id_pack'
+require 'id_pack'
 ----
 
-And then execute:
+=== IdPacker
 
-....
-$ bundle
-....
+[source,ruby]
+----
+id_packer = IdPack::IdPacker.new
+----
 
-Or install it yourself as:
+To encode/decode a set of IDs:
 
-....
-$ gem install id_pack
-....
+[source,ruby]
+----
+ids         = [5, 6, 21, 23, 25]
+encoded_ids = id_packer.encode(ids)         #=> "_F~C_P.V"
+decoded_ids = id_packer.decode(encoded_ids) #=> [5, 6, 21, 23, 25]
+ids == decoded_ids                          #=> true
+----
 
-[[usage]]
-Usage
-~~~~~
+To work with `sync_str`:
 
-TODO: Write usage instructions here
+[source,ruby]
+----
+ids_synced_at = {
+  1  => 1510294889,
+  2  => 1510292639,
+  10 => 1510279639,
+}
 
-[[development]]
-Development
-~~~~~~~~~~~
+sync_str = id_packer.encode_sync_str(ids_synced_at)
+#=> "IwVmAYCYHYE4DYDMsg,IxA,IwVgTCAMQ,ExA,IwZgDBQ,IwBiA,AxA"
+
+decoded_sync_map = id_packer.decode_sync_str(sync_str)
+#=> {1=>1510294889, 2=>1510292639, 10=>1510279639}
+
+ids_synced_at == decoded_sync_map
+#=> true
+----
+
+==== Advanced `sync_str` usage
+
+`IdPacker#decode_sync_str` optionally supports a `base_timestamp`:
+
+[source,ruby]
+----
+base_timestamp2   = 1000
+decoded_sync_map2 = id_packer.decode_sync_str(sync_str, base_timestamp2)
+#=> {1=>1510295889, 2=>1510293639, 10=>1510280639}
+
+base_timestamp3   = - ids_synced_at.min[1]
+decoded_sync_map3 = id_packer.decode_sync_str(sync_str, base_timestamp3)
+#=> {1=>0, 2=>-2250, 10=>-15250}
+
+base_timestamp4   = - ids_synced_at.max[1]
+decoded_sync_map4 = id_packer.decode_sync_str(sync_str, base_timestamp4)
+#=> {1=>15250, 2=>13000, 10=>0}
+----
+
+`base_timestamp` is typically specified to reverse any normalization of
+timestamps done on the client side (not shown in this README).
+
+=== UuidPacker
+
+[source,ruby]
+----
+uuid_packer = IdPack::UuidPacker.new
+----
+
+[source,ruby]
+----
+uuids         = [
+  'ea8bed36-a73d-4fff-af36-32162274dfd1',
+  '22347af1-7c60-48e0-8cc5-a30746812267',
+  '3e514775-bfdb-44f9-92b2-c4c53a7dc89d',
+]
+----
+
+To encode/decode a set of UUIDs, first, specify the set of encoding characters:
+
+[source,ruby]
+----
+base_string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-_'
+----
+
+Also, decide whether we want to preserve the order of the UUIDs:
+
+[source,ruby]
+----
+ordered = true
+----
+
+[source,ruby]
+----
+encoded_uuids = uuid_packer.alphanum_compress(uuids, base_string, ordered)
+#=> "Rf2XIjQmNnr_8rzlbLfRV+ZEgWLgxaMxBxIGPo9eLES5E75coyNNSZ8i2_tdxRT4"
+
+decoded_uuids = uuid_packer.alphanum_decompress(encoded_uuids, base_string)
+#=> ["ea8bed36-a73d-4fff-af36-32162274dfd1", "22347af1-7c60-48e0-8cc5-a30746812267", "3e514775-bfdb-44f9-92b2-c4c53a7dc89d"]
+
+uuids == decoded_uuids
+#=> true
+----
+
+
+If we don't care for the order:
+
+[source,ruby]
+----
+ordered = false
+----
+
+[source,ruby]
+----
+unordered_encoded_uuids = uuid_packer.alphanum_compress(uuids, base_string, ordered)
+unordered_decoded_uuids = uuid_packer.alphanum_decompress(unordered_encoded_uuids, base_string)
+
+uuids == unordered_decoded_uuids
+#=> false
+
+uuids.sort == unordered_decoded_uuids.sort
+#=> true
+----
+
+== Development
 
 After checking out the repo, run `bin/setup` to install dependencies.
-Then, run `rake spec` to run the tests. You can also run `bin/console`
-for an interactive prompt that will allow you to experiment.
+Then, run `bundle exec rake spec` to run the tests.
+You can also run `bin/console` for an interactive prompt that will allow you to
+experiment.
 
-To install this gem onto your local machine, run
-`bundle exec rake install`. To release a new version, update the version
-number in `version.rb`, and then run `bundle exec rake release`, which
-will create a git tag for the version, push git commits and tags, and
-push the `.gem` file to https://rubygems.org[rubygems.org].
-
-[[contributing]]
-Contributing
-~~~~~~~~~~~~
+== Contributing
 
 Bug reports and pull requests are welcome on GitHub at
 https://github.com/riboseinc/id_pack. This project is intended to be a
 safe, welcoming space for collaboration, and contributors are expected
 to adhere to the http://contributor-covenant.org[Contributor Covenant]
 code of conduct.
+
+== License
+
+The gem is available as open source under the terms of the
+http://opensource.org/licenses/MIT[MIT License].
