@@ -2,12 +2,16 @@
 IdPack
 ------
 
-Welcome to your new gem! In this directory, you’ll find the files you
-need to be able to package up your Ruby library into a gem. Put your
-Ruby code in the file `lib/id_pack`. To experiment with that code, run
-`bin/console` for an interactive prompt.
+image:https://img.shields.io/gem/v/id_pack.svg[
+	Gem Version, link="https://rubygems.org/gems/id_pack"]
+image:https://img.shields.io/travis/riboseinc/id_pack/master.svg[
+	Build Status, link="https://travis-ci.org/riboseinc/id_pack"]
+image:https://api.codeclimate.com/v1/badges/655d7aa547daa7b45148/maintainability[
+	"Code Climate", link="https://codeclimate.com/github/riboseinc/id_pack/maintainability"]
+image:https://img.shields.io/codecov/c/github/riboseinc/id_pack.svg[
+	"Test Coverage", link="https://codecov.io/gh/riboseinc/id_pack"]
 
-TODO: Delete this and the text above, and describe your gem
+TODO: Add introduction
 
 [[installation]]
 Installation
