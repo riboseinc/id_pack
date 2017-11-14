@@ -16,7 +16,7 @@
 
   /* Browser globals */
   else {
-    factory();
+    window.UuidPacker = factory();
   }
 
 }(function() {

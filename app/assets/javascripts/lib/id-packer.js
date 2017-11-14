@@ -85,7 +85,7 @@
 
   /* Browser globals */
   else {
-    factory();
+    window.IdPacker = factory();
   }
 
 }(function() {
