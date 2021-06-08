@@ -2,8 +2,8 @@
 
 image:https://img.shields.io/gem/v/id_pack.svg[
 	Gem Version, link="https://rubygems.org/gems/id_pack"]
-image:https://img.shields.io/travis/riboseinc/id_pack/master.svg[
-	Build Status, link="https://travis-ci.org/riboseinc/id_pack"]
+image:https://github.com/riboseinc/id_pack/actions/workflows/tests.yml/badge.svg[
+	Build Status, link="https://github.com/riboseinc/id_pack/actions/workflows/tests.yml"]
 image:https://api.codeclimate.com/v1/badges/655d7aa547daa7b45148/maintainability[
 	"Code Climate - Maintainability", link="https://codeclimate.com/github/riboseinc/id_pack/maintainability"]
 image:https://img.shields.io/codecov/c/github/riboseinc/id_pack.svg[
