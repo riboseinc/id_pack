@@ -1,0 +1,51 @@
+inherit_from:
+  - https://raw.githubusercontent.com/riboseinc/oss-guides/master/ci/rubocop.yml
+
+# local repo-specific modifications
+# ...
+Style/StringLiterals:
+  Enabled: false
+
+Metrics/BlockLength:
+  Enabled: false
+
+Rails:
+  RunRailsCops: true
+
+Metrics/AbcSize:
+  Max: 36
+
+Metrics/CyclomaticComplexity:
+  Max: 9
+
+# Configuration parameters: AllowHeredoc, AllowURI, URISchemes, IgnoreCopDirectives, IgnoredPatterns.
+Metrics/LineLength:
+  Max: 82
+
+# Check cyclomatic complexity instead.
+Metrics/MethodLength:
+  Enabled: false
+Metrics/ClassLength:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Max: 9
+
+# Trailing commas make for clearer diffs because the last line won't appear
+# to have been changed, as it would if it lacked a comma and had one added.
+Style/TrailingCommaInLiteral:
+  EnforcedStyleForMultiline: comma
+Style/TrailingCommaInArguments:
+  EnforcedStyleForMultiline: comma
+
+Layout/EmptyLines:
+  Enabled: false
+
+Layout/EmptyLinesAroundBlockBody:
+  Enabled: false
+Layout/EmptyLinesAroundMethodBody:
+  Enabled: false
+Layout/EmptyLinesAroundClassBody:
+  Enabled: false
+Layout/EmptyLinesAroundModuleBody:
+  Enabled: false
