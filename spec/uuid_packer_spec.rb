@@ -45,8 +45,8 @@ RSpec.describe IdPack::UuidPacker do
 
     # Boolean - Check if 'delta' is being used or not
     let(:delta) do
-      0 !=      alp_array.rassoc(compressed_array[0])[0] &
-           (2**(alp_array.rassoc(compressed_array[0])[2] - 1))
+      alp_array.rassoc(compressed_array[0])[0] &
+        (2**(alp_array.rassoc(compressed_array[0])[2] - 1)) != 0
     end
 
     it 'has an appropriate compression rate' do
@@ -89,8 +89,8 @@ RSpec.describe IdPack::UuidPacker do
 
   lotsa_chars =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-_:/\\`~!@\#$%^&*()=[]{}|;'\",.<>?"
-    .split('')
-    .uniq
+      .split('')
+      .uniq
 
   # Progressively increase the number of characters for the base string for our
   # test cases, starting from just 2 characters.

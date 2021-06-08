@@ -7,15 +7,18 @@ RSpec.describe IdPack::IdPacker do
   end
 
   it 'should convert numbers to ranges' do
-    expect(packer.send(:convert_numbers_to_ranges, [1, 2, 3, 6, 7, 8])).to eql([1..3, 6..8])
+    expect(packer.send(:convert_numbers_to_ranges,
+                       [1, 2, 3, 6, 7, 8])).to eql([1..3, 6..8])
   end
 
   it 'should convert ranges to binary_number' do
-    expect(packer.send(:convert_ranges_to_binary_number, [1..3, 6..8])).to eql("11100111")
+    expect(packer.send(:convert_ranges_to_binary_number,
+                       [1..3, 6..8])).to eql("11100111")
   end
 
   it 'should convert binary number to decimal number' do
-    expect(packer.send(:convert_binary_number_to_decimal_number, "10101")).to eql(21)
+    expect(packer.send(:convert_binary_number_to_decimal_number,
+                       "10101")).to eql(21)
   end
 
   it 'should encode decimal number' do
@@ -23,23 +26,28 @@ RSpec.describe IdPack::IdPacker do
   end
 
   it 'should convert decimal number to binary number' do
-    expect(packer.send(:convert_decimal_number_to_binary_number, 10)).to eql("1010")
+    expect(packer.send(:convert_decimal_number_to_binary_number,
+                       10)).to eql("1010")
   end
 
   it 'should convert encoded number to decimal number' do
-    expect(packer.send(:convert_encoded_number_to_decimal_number, "ABC")).to eql(65)
+    expect(packer.send(:convert_encoded_number_to_decimal_number,
+                       "ABC")).to eql(65)
   end
 
   it 'should convert spaces encoded_number to ids' do
-    expect(packer.send(:convert_encoded_number_to_ids, "_", "E", 1)).to eql([[], 4])
+    expect(packer.send(:convert_encoded_number_to_ids, "_", "E",
+                       1)).to eql([[], 4])
   end
 
   it 'should convert range encoded_number to ids' do
-    expect(packer.send(:convert_encoded_number_to_ids, "~", "C", 5)).to eql([[5, 6], 6])
+    expect(packer.send(:convert_encoded_number_to_ids, "~", "C",
+                       5)).to eql([[5, 6], 6])
   end
 
   it 'should convert binary encoded_number to ids' do
-    expect(packer.send(:convert_encoded_number_to_ids, ".", "V", 21)).to eql([[21, 23, 25], 25])
+    expect(packer.send(:convert_encoded_number_to_ids, ".", "V",
+                       21)).to eql([[21, 23, 25], 25])
   end
 
   it "should decode encoded array" do
@@ -70,12 +78,12 @@ RSpec.describe IdPack::IdPacker do
   end
 
   it 'should encode integer arrays without any error' do
-    expect {
+    expect do
       10.times do |i|
-        int_arr = [10 ** i]
+        int_arr = [10**i]
         packer.encode(int_arr)
       end
-    }.to_not raise_error
+    end.to_not raise_error
   end
 
   it 'should decode encoded sync_str without base timestamp' do
@@ -86,7 +94,7 @@ RSpec.describe IdPack::IdPacker do
       10 => current_timestamp,
       20 => current_timestamp - 3600000,
       23 => current_timestamp - 3600000,
-      31 => current_timestamp - 1080000
+      31 => current_timestamp - 1080000,
     }
 
     sync_str = packer.encode_sync_str(synced_at_map)
@@ -102,7 +110,7 @@ RSpec.describe IdPack::IdPacker do
       10 => current_timestamp,
       20 => current_timestamp - 3600000,
       23 => current_timestamp - 3600000,
-      31 => current_timestamp - 1080000
+      31 => current_timestamp - 1080000,
     }
     synced_at_map_with_base_timestamp = synced_at_map.keys.reduce({}) do |m, k|
       m[k] = synced_at_map[k] - base_timestamp

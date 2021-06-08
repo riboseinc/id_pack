@@ -1,11 +1,11 @@
 module IdPack
   module LZString
-    KEY_STR_BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
-    KEY_STR_URI_SAFE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$"
+    KEY_STR_BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=".freeze
+    KEY_STR_URI_SAFE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$".freeze
 
     class << self
 
-      def get_base_value alphabet, character
+      def get_base_value(alphabet, character)
         @base_reverse_dic ||= {}
 
         if !@base_reverse_dic[alphabet]
@@ -19,7 +19,7 @@ module IdPack
         @base_reverse_dic[alphabet][character]
       end
 
-      def compress_to_base64 input
+      def compress_to_base64(input)
         return "" if input.nil?
 
         res = _compress(input, 6) do |a|
@@ -28,13 +28,13 @@ module IdPack
 
         case res.length % 4
         when 0 then res
-        when 1 then res + "==="
-        when 2 then res + "=="
-        when 3 then res + "="
+        when 1 then "#{res}==="
+        when 2 then "#{res}=="
+        when 3 then "#{res}="
         end
       end
 
-      def decompress_from_base64 input
+      def decompress_from_base64(input)
         return "" if input.nil?
         return nil if input == ""
 
@@ -43,7 +43,7 @@ module IdPack
         end
       end
 
-      def compress_to_utf16 input
+      def compress_to_utf16(input)
         return "" if input.nil?
 
         _compress(input, 15) do |a|
@@ -51,7 +51,7 @@ module IdPack
         end + " "
       end
 
-      def decompress_from_utf16 compressed
+      def decompress_from_utf16(compressed)
         return "" if compressed.nil?
         return nil if compressed == ""
 
@@ -60,7 +60,7 @@ module IdPack
         end
       end
 
-      def compress_to_uint8_array uncompressed
+      def compress_to_uint8_array(uncompressed)
         compressed = compress(uncompressed)
         buf = []
 
@@ -73,7 +73,7 @@ module IdPack
         buf
       end
 
-      def decompress_from_uint8_array compressed
+      def decompress_from_uint8_array(compressed)
         return decompress(compressed) if compressed.nil?
 
         buf = []
@@ -84,16 +84,16 @@ module IdPack
 
         result = []
 
-        buf.each do |c|
+        buf.each do |_c|
           result.push(
-            [a + 32].pack 'U'
+            [a + 32].pack('U'),
           )
         end
 
         decompress(result.join(''))
       end
 
-      def compress_to_encoded_uri_component input
+      def compress_to_encoded_uri_component(input)
         return "" if input.nil?
 
         _compress(input, 6) do |a|
@@ -101,7 +101,7 @@ module IdPack
         end
       end
 
-      def decompress_from_encoded_uri_component input
+      def decompress_from_encoded_uri_component(input)
         return "" if input.nil?
         return nil if input == ""
 
@@ -112,13 +112,13 @@ module IdPack
         end
       end
 
-      def compress uncompressed
+      def compress(uncompressed)
         _compress(uncompressed, 16) do |a|
           [a].pack 'U'
         end
       end
 
-      def _compress uncompressed, bits_per_char, &get_char_from_int
+      def _compress(uncompressed, bits_per_char)
         return "" if uncompressed.nil?
 
         context_dictionary = {}
@@ -149,12 +149,12 @@ module IdPack
           else
             if context_dictionary_to_create[context_w]
               if context_w[0].ord < 256
-                context_num_bits.times do |i|
+                context_num_bits.times do |_i|
                   context_data_val = (context_data_val << 1)
 
                   if context_data_position == bits_per_char - 1
                     context_data_position = 0
-                    context_data.push(get_char_from_int.call(context_data_val))
+                    context_data.push(yield(context_data_val))
                     context_data_val = 0
                   else
                     context_data_position += 1
@@ -163,12 +163,12 @@ module IdPack
 
                 value = context_w[0].ord
 
-                8.times do |i|
+                8.times do |_i|
                   context_data_val = (context_data_val << 1) | (value & 1)
 
                   if context_data_position == bits_per_char - 1
                     context_data_position = 0
-                    context_data.push(get_char_from_int.call(context_data_val))
+                    context_data.push(yield(context_data_val))
                     context_data_val = 0
                   else
                     context_data_position += 1
@@ -179,12 +179,12 @@ module IdPack
               else
                 value = 1
 
-                context_num_bits.times do |i|
+                context_num_bits.times do |_i|
                   context_data_val = (context_data_val << 1) | value
 
                   if context_data_position == bits_per_char - 1
                     context_data_position = 0
-                    context_data.push(get_char_from_int.call(context_data_val))
+                    context_data.push(yield(context_data_val))
                     context_data_val = 0
                   else
                     context_data_position += 1
@@ -195,12 +195,12 @@ module IdPack
 
                 value = context_w[0].ord
 
-                16.times do |i|
+                16.times do |_i|
                   context_data_val = (context_data_val << 1) | (value & 1)
 
                   if context_data_position == bits_per_char - 1
                     context_data_position = 0
-                    context_data.push(get_char_from_int.call(context_data_val))
+                    context_data.push(yield(context_data_val))
                     context_data_val = 0
                   else
                     context_data_position += 1
@@ -212,8 +212,8 @@ module IdPack
 
               context_enlarge_in -= 1
 
-              if context_enlarge_in == 0
-                context_enlarge_in = 2 ** context_num_bits
+              if context_enlarge_in.zero?
+                context_enlarge_in = 2**context_num_bits
                 context_num_bits += 1
               end
 
@@ -221,12 +221,12 @@ module IdPack
             else
               value = context_dictionary[context_w]
 
-              context_num_bits.times do |i|
+              context_num_bits.times do |_i|
                 context_data_val = (context_data_val << 1) | (value & 1)
 
                 if context_data_position == bits_per_char - 1
                   context_data_position = 0
-                  context_data.push(get_char_from_int.call(context_data_val))
+                  context_data.push(yield(context_data_val))
                   context_data_val = 0
                 else
                   context_data_position += 1
@@ -238,8 +238,8 @@ module IdPack
 
             context_enlarge_in -= 1
 
-            if context_enlarge_in == 0
-              context_enlarge_in = 2 ** context_num_bits
+            if context_enlarge_in.zero?
+              context_enlarge_in = 2**context_num_bits
               context_num_bits += 1
             end
 
@@ -252,12 +252,12 @@ module IdPack
         if context_w != ""
           if context_dictionary_to_create[context_w]
             if context_w[0].ord < 256
-              context_num_bits.times do |i|
+              context_num_bits.times do |_i|
                 context_data_val = context_data_val << 1
 
                 if context_data_position == bits_per_char - 1
                   context_data_position = 0
-                  context_data.push(get_char_from_int.call(context_data_val))
+                  context_data.push(yield(context_data_val))
                   context_data_val = 0
                 else
                   context_data_position += 1
@@ -266,12 +266,12 @@ module IdPack
 
               value = context_w[0].ord
 
-              8.times do |i|
+              8.times do |_i|
                 context_data_val = (context_data_val << 1) | (value & 1)
 
                 if context_data_position == bits_per_char - 1
                   context_data_position = 0
-                  context_data.push(get_char_from_int.call(context_data_val))
+                  context_data.push(yield(context_data_val))
                   context_data_val = 0
                 else
                   context_data_position += 1
@@ -282,12 +282,12 @@ module IdPack
             else
               value = 1
 
-              context_num_bits.times do |i|
+              context_num_bits.times do |_i|
                 context_data_val = (context_data_val << 1) | value
 
                 if context_data_position == bits_per_char - 1
                   context_data_position = 0
-                  context_data.push(get_char_from_int.call(context_data_val))
+                  context_data.push(yield(context_data_val))
                   context_data_val = 0
                 else
                   context_data_position += 1
@@ -298,12 +298,12 @@ module IdPack
 
               value = context_w[0].ord
 
-              16.times do |i|
+              16.times do |_i|
                 context_data_val = (context_data_val << 1) | (value & 1)
 
                 if context_data_position == bits_per_char - 1
                   context_data_position = 0
-                  context_data.push(get_char_from_int.call(context_data_val))
+                  context_data.push(yield(context_data_val))
                   context_data_val = 0
                 else
                   context_data_position += 1
@@ -315,8 +315,8 @@ module IdPack
 
             context_enlarge_in -= 1
 
-            if context_enlarge_in == 0
-              context_enlarge_in = 2 ** context_num_bits
+            if context_enlarge_in.zero?
+              context_enlarge_in = 2**context_num_bits
               context_num_bits += 1
             end
 
@@ -324,12 +324,12 @@ module IdPack
           else
             value = context_dictionary[context_w]
 
-            context_num_bits.times do |i|
+            context_num_bits.times do |_i|
               context_data_val = (context_data_val << 1) | (value & 1)
 
               if context_data_position == bits_per_char - 1
                 context_data_position = 0
-                context_data.push(get_char_from_int.call(context_data_val))
+                context_data.push(yield(context_data_val))
                 context_data_val = 0
               else
                 context_data_position += 1
@@ -341,20 +341,20 @@ module IdPack
 
           context_enlarge_in -= 1
 
-          if context_enlarge_in == 0
-            context_enlarge_in = 2 ** context_num_bits
+          if context_enlarge_in.zero?
+            context_enlarge_in = 2**context_num_bits
             context_num_bits += 1
           end
         end
 
         value = 2
 
-        context_num_bits.times do |i|
+        context_num_bits.times do |_i|
           context_data_val = (context_data_val << 1) | (value & 1)
 
           if context_data_position == bits_per_char - 1
             context_data_position = 0
-            context_data.push(get_char_from_int.call(context_data_val))
+            context_data.push(yield(context_data_val))
             context_data_val = 0
           else
             context_data_position += 1
@@ -363,11 +363,11 @@ module IdPack
           value = value >> 1
         end
 
-        while true do
+        loop do
           context_data_val = (context_data_val << 1)
 
           if context_data_position == bits_per_char - 1
-            context_data.push(get_char_from_int.call(context_data_val))
+            context_data.push(yield(context_data_val))
             break
           else
             context_data_position += 1
@@ -377,7 +377,7 @@ module IdPack
         context_data.join('')
       end
 
-      def decompress compressed
+      def decompress(compressed)
         return "" if compressed.nil?
         return null if compressed == ""
 
@@ -386,7 +386,7 @@ module IdPack
         end
       end
 
-      def _decompress length, reset_value, &get_next_value
+      def _decompress(length, reset_value)
         dictionary = []
         enlarge_in = 4
         dict_size = 4
@@ -394,9 +394,9 @@ module IdPack
         entry = ""
         result = []
         data = {
-          val: get_next_value.call(0),
+          val: yield(0),
           position: reset_value,
-          index: 1
+          index: 1,
         }
 
         3.times do |i|
@@ -404,60 +404,60 @@ module IdPack
         end
 
         bits = 0
-        maxpower = 2 ** 2
+        maxpower = 2**2
         power = 1
 
         while power != maxpower
           resb = data[:val] & data[:position]
           data[:position] = data[:position] >> 1
 
-          if data[:position] == 0
+          if (data[:position]).zero?
             data[:position] = reset_value
-            data[:val] = get_next_value.call(data[:index])
+            data[:val] = yield(data[:index])
             data[:index] += 1
           end
 
-          bits |= (resb > 0 ? 1 : 0) * power
+          bits |= (resb.positive? ? 1 : 0) * power
           power = power << 1
         end
 
         case bits
         when 0
           bits = 0
-          maxpower = 2 ** 8
+          maxpower = 2**8
           power = 1
 
           while power != maxpower
             resb = data[:val] & data[:position]
             data[:position] = data[:position] >> 1
 
-            if data[:position] == 0
+            if (data[:position]).zero?
               data[:position] = reset_value
-              data[:val] = get_next_value.call(data[:index])
+              data[:val] = yield(data[:index])
               data[:index] += 1
             end
 
-            bits |= (resb > 0 ? 1 : 0) * power
+            bits |= (resb.positive? ? 1 : 0) * power
             power <<= 1
           end
 
           c = [bits].pack 'U'
         when 1
           bits = 0
-          maxpower = 2 ** 16
+          maxpower = 2**16
           power = 1
 
           while power != maxpower
             resb = data[:val] & data[:position]
             data[:position] = data[:position] >> 1
 
-            if data[:position] == 0
+            if (data[:position]).zero?
               data[:position] = reset_value
-              data[:val] = get_next_value.call(data[:index])
+              data[:val] = yield(data[:index])
               data[:index] += 1
             end
 
-            bits |= (resb > 0 ? 1 : 0) * power
+            bits |= (resb.positive? ? 1 : 0) * power
             power <<= 1
           end
 
@@ -470,24 +470,24 @@ module IdPack
         w = c
         result.push(c)
 
-        while true do
+        loop do
           return "" if data[:index] > length
 
           bits = 0
-          maxpower = 2 ** num_bits
+          maxpower = 2**num_bits
           power = 1
 
           while power != maxpower
             resb = data[:val] & data[:position]
             data[:position] = data[:position] >> 1
 
-            if data[:position] == 0
+            if (data[:position]).zero?
               data[:position] = reset_value
-              data[:val] = get_next_value.call(data[:index])
+              data[:val] = yield(data[:index])
               data[:index] += 1
             end
 
-            bits |= (resb > 0 ? 1 : 0) * power
+            bits |= (resb.positive? ? 1 : 0) * power
             power <<= 1
           end
 
@@ -496,20 +496,20 @@ module IdPack
           case bits
           when 0
             bits = 0
-            maxpower = 2 ** 8
+            maxpower = 2**8
             power = 1
 
             while power != maxpower
               resb = data[:val] & data[:position]
               data[:position] >>= 1
 
-              if data[:position] == 0
+              if (data[:position]).zero?
                 data[:position] = reset_value
-                data[:val] = get_next_value.call(data[:index])
+                data[:val] = yield(data[:index])
                 data[:index] += 1
               end
 
-              bits |= (resb > 0 ? 1 : 0) * power
+              bits |= (resb.positive? ? 1 : 0) * power
               power <<= 1
             end
 
@@ -519,20 +519,20 @@ module IdPack
             enlarge_in -= 1
           when 1
             bits = 0
-            maxpower = 2 ** 16
+            maxpower = 2**16
             power = 1
 
             while power != maxpower
               resb = data[:val] & data[:position]
               data[:position] >>= 1
 
-              if data[:position] == 0
+              if (data[:position]).zero?
                 data[:position] = reset_value
-                data[:val] = get_next_value.call(data[:index])
+                data[:val] = yield(data[:index])
                 data[:index] += 1
               end
 
-              bits |= (resb > 0 ? 1 : 0) * power
+              bits |= (resb.positive? ? 1 : 0) * power
               power <<= 1
             end
 
@@ -544,8 +544,8 @@ module IdPack
             return result.join("")
           end
 
-          if enlarge_in == 0
-            enlarge_in = 2 ** num_bits
+          if enlarge_in.zero?
+            enlarge_in = 2**num_bits
             num_bits += 1
           end
 
@@ -565,8 +565,8 @@ module IdPack
 
           w = entry
 
-          if enlarge_in == 0
-            enlarge_in = 2 ** num_bits
+          if enlarge_in.zero?
+            enlarge_in = 2**num_bits
             num_bits += 1
           end
         end

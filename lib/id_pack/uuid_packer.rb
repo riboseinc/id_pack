@@ -5,7 +5,7 @@ module IdPack
     # calculate bits in number
     def bin_pow(num)
       pow = 0
-      pow += 1 until num >> pow == 0
+      pow += 1 until (num >> pow).zero?
       pow
     end
 
@@ -106,7 +106,7 @@ module IdPack
       end
 
       # check if we have tail of BBC
-      if rest > 0
+      if rest.positive?
         code   = ((achr & (2**rest - 1)) + 2**rest).to_s(2).reverse.to_i(2) >> 1
         code <<= pow - rest - 1
         code <<= 1 if code >= lowhi
@@ -173,7 +173,7 @@ module IdPack
           end
 
           # check if we have tail of BBC for current UUID
-          if rest > 0
+          if rest.positive?
             code   = (
               (achr & (2**rest - 1)) + 2**rest
             ).to_s(2).reverse.to_i(2) >> 1
@@ -211,7 +211,7 @@ module IdPack
       if (
           alphanum_array.rassoc(str[0])[0] &
           (2**(alphanum_array.rassoc(str[0])[2] - 1))
-      ) != 0
+        ) != 0
 
         # delta used
         alphanum_array = alphanum_to_array alphanum_string, true
@@ -298,7 +298,7 @@ module IdPack
               alphanum_array.rassoc(str[item])[0] +
               2**alphanum_array.rassoc(str[item])[2]
             )
-            .to_s(2).reverse.to_i(2) >> 1
+              .to_s(2).reverse.to_i(2) >> 1
 
           # add bits to BBC
           achr += code << rest
