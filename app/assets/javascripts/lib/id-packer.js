@@ -99,20 +99,315 @@
     isExcludeNull:             true,
     outputCharset:             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-",
 
+    range: function(start, length) {
+
+      /** convert arguments to numbers */
+      if (typeof start != 'number') {
+        start     = parseInt(start, 10);
+      }
+      if (typeof length != 'number') {
+        length    = parseInt(length, 10);
+      }
+      this.start  = !$.isNumeric(start)  ? 0 : start;
+      this.length = !$.isNumeric(length) ? 0 : length;
+
+      // range functions
+
+      /**
+       * var range = IdPacker.range(0, 5);
+       * range.clone();
+       * => IdPacker.range(0, 5)
+       */
+      this.clone = function() {
+        return IdPacker.range(this.start, this.length);
+      };
+
+      /**
+       * var range = IdPacker.range(0, 5);
+       * range.end();
+       * => 4
+       */
+      this.end = function() {
+        return this.start + this.length - 1;
+      };
+
+      /**
+       * var range = IdPacker.range(3, 5);
+       * range.roundToWindow(5);
+       * => IdPacker.range(0, 10)
+       *
+       * range.roundToWindow(2);
+       * => IdPacker.range(2, 6)
+       */
+      this.roundToWindow = function(window_size) {
+        var start  = Math.floor(this.start / window_size) * window_size;
+        var length = Math.ceil((this.start + this.length - start) / window_size) * window_size;
+        return IdPacker.range(start, length);
+      };
+
+      /**
+       * var range = IdPacker.range(0, 5);
+       * range.contain(3);
+       * => true
+       *
+       * range.contain(8);
+       * => false
+       */
+      this.contain = function(n) {
+        return n >= this.start && n <= this.end();
+      };
+
+      // range-to-range functions
+
+      /**
+       * var range1 = IdPacker.range(0, 2);
+       * var range2 = IdPacker.range(2, 2);
+       * var range3 = IdPacker.range(3, 2);
+       * range1.touch(range2);
+       * => true
+       *
+       * range1.touch(range3);
+       * => false
+       *
+       * range2.touch(range3);
+       * => true
+       */
+      this.touch = function(range) {
+        var start  = Math.max(this.start, range.start);
+        var end    = Math.min(this.end(), range.end());
+        var length = end - start + 1;
+        return length >= 0;
+      };
+
+      /**
+       * var range1 = IdPacker.range(2, 2);
+       * var range2 = IdPacker.range(3, 2);
+       * range1.intersect(range2);
+       * => IdPacker.range(3, 1)
+       */
+      this.intersect = function(range) {
+        var start  = Math.max(this.start, range.start);
+        var end    = Math.min(this.end(), range.end());
+        var length = end - start + 1;
+        return (length > 0) ? IdPacker.range(start, length) : null;
+      };
+
+      /**
+       * var range1 = IdPacker.range(2, 2);
+       * var range2 = IdPacker.range(2, 5);
+       * var range3 = IdPacker.range(0, 5);
+       * range1.isSubsetOf(range3);
+       * => true
+       *
+       * range2.isSubsetOf(range3);
+       * => false
+       */
+      this.isSubsetOf = function(range) {
+        return range.contain(this.start) && range.contain(this.end());
+      };
+
+      /**
+       * var range1 = IdPacker.range(0, 5);
+       * var range2 = IdPacker.range(2, 5);
+       * range1.union(range2);
+       * => IdPacker.range(0, 7)
+       */
+      this.union = function(range) {
+        var start = Math.min(this.start, range.start);
+        var end = Math.max(this.end(), range.end());
+        var length = end - start + 1;
+        return IdPacker.range(start, length);
+      };
+
+      /**
+       * var range1 = IdPacker.range(0, 5);
+       * var range2 = IdPacker.range(2, 5);
+       * range1.minus(range2);
+       * => IdPacker.range(0, 2)
+       */
+      this.minus = function(range) {
+        var intersectedRange = this.intersect(range);
+        if (this.equal(intersectedRange)) {
+          return [];
+        } else if (this.start < intersectedRange.start && this.end() > intersectedRange.end()) {
+          return [(IdPacker.range(this.start, intersectedRange.start - this.start)),
+            (IdPacker.range(intersectedRange.end() + 1, this.end() - intersectedRange.end()))];
+        } else if (this.start < intersectedRange.start) {
+          return [IdPacker.range(this.start, intersectedRange.start - this.start)];
+        } else {
+          return [IdPacker.range(intersectedRange.end() + 1, this.end() - intersectedRange.end())];
+        }
+      };
+
+      /**
+       * var range1 = IdPacker.range(0, 2);
+       * var range2 = IdPacker.range(0, 2);
+       * var range3 = IdPacker.range(2, 2);
+       * range1.equal(range2);
+       * => true
+       *
+       * range1.equal(range3);
+       * => false
+       */
+      this.equal = function (range) {
+        return this.start == range.start && this.length == range.length;
+      };
+
+      // range-to-ranges functions
+
+      /**
+       * var range1 = IdPacker.range(0, 2);
+       * var range2 = IdPacker.range(2, 2);
+       * var ranges = [IdPacker.range(0, 3), IdPacker.range(5, 3)];
+       * range1.hasFullRange(ranges);
+       * => true
+       *
+       * range2.hasFullRange(ranges);
+       * => false
+       */
+      this.hasFullRange = function(ranges) {
+        for(var i = 0, l = ranges.length; i < l; i++) {
+          if (this.isSubsetOf(ranges[i])) {
+            return true;
+          }
+        }
+        return false;
+      };
+
+      /**
+       * var range = IdPacker.range(2, 5);
+       * var ranges = [IdPacker.range(0, 3), IdPacker.range(5, 3)];
+       * range.getOverlapRanges(ranges);
+       * => [IdPacker.range(2, 1), IdPacker.range(5, 2)]
+       */
+      this.getOverlapRanges = function(ranges) {
+        var overlapRanges = [];
+        for(var i = 0, l = ranges.length; i < l; i++) {
+          var intersectedRange = this.intersect(ranges[i]);
+          if (intersectedRange !== null) {
+            overlapRanges.push(intersectedRange);
+          }
+        }
+        return overlapRanges;
+      };
+
+      /**
+       * var range = IdPacker.range(2, 5);
+       * var ranges = [IdPacker.range(0, 3), IdPacker.range(5, 3)];
+       * range.getMissingRanges(ranges);
+       * => [IdPacker.range(3, 2)]
+       */
+      this.getMissingRanges = function(ranges) {
+        var overlapRanges = this.getOverlapRanges(ranges);
+        var missingRanges = [];
+        var missingRange  = this;
+
+        for(var i = 0, ol = overlapRanges.length; i < ol; i++) {
+          var currentMissingRanges = missingRange.minus(overlapRanges[i]);
+          for (var j = 0, cl = currentMissingRanges.length-1; j < cl; j++) {
+            missingRanges.push(currentMissingRanges[j]);
+          }
+          missingRange = currentMissingRanges[currentMissingRanges.length-1];
+        }
+
+        if (missingRange) {
+          missingRanges.push(missingRange);
+        }
+        return missingRanges;
+      };
+
+      /**
+       * var range = IdPacker.range(2, 5);
+       * var ranges = [IdPacker.range(0, 3), IdPacker.range(5, 3)];
+       * range.addToRanges(ranges);
+       * => [IdPacker.range(0, 8)]
+       */
+      this.addToRanges = function(ranges){
+        if (! ranges.length) {
+          ranges.push(this);
+          return ranges;
+        }
+        var i, l;
+        var overlapRanges = [];
+        var accumulate;
+
+        for (i = 0, l = ranges.length; i < l; i++) {
+          if (this.touch(ranges[i])) {
+            overlapRanges.push(i);
+          }
+        }
+        if (overlapRanges.length === 0) {
+          for (i = 0, l = ranges.length; i < l; i++) {
+            if (this.start < ranges[i].start) {
+              Array.prototype.splice.apply(ranges, [i, 0].concat(this));
+              return ranges;
+            }
+          }
+          ranges.push(this);
+          return ranges;
+        }
+
+        accumulate = this;
+        for (i = 0, l = overlapRanges.length; i < l; i++) {
+          accumulate = accumulate.union(ranges[overlapRanges[i]]);
+        }
+
+        Array.prototype.splice.apply(
+          ranges, [overlapRanges[0], overlapRanges.length].concat(accumulate)
+        );
+        return ranges;
+      };
+
+      /**
+       * var range = IdPacker.range(2, 5);
+       * var ranges = [IdPacker.range(0, 3), IdPacker.range(5, 3)];
+       * range.deleteFromRanges(ranges);
+       * => [IdPacker.range(0, 2), IdPacker.range(7, 1)]
+       *
+       * @param {Array(Range)} ranges
+       * @return {Array(Range)}
+       */
+      this.deleteFromRanges = function(ranges) {
+        var i, l;
+        var overlapRanges = [];
+        var accumulate    = [];
+
+        for (i = 0, l = ranges.length; i < l; i++) {
+          if (this.intersect(ranges[i]) !== null) {
+            overlapRanges.push(i);
+          }
+        }
+        if (overlapRanges.length === 0) {
+          return ranges;
+        }
+
+        accumulate = [];
+
+        for (i = 0, l = overlapRanges.length; i < l; i++) {
+          accumulate = accumulate.concat(ranges[overlapRanges[i]].minus(this));
+        }
+
+        Array.prototype.splice.apply(
+          ranges, [overlapRanges[0], overlapRanges.length].concat(accumulate)
+        );
+        return ranges;
+      };
+    },
+
     /**
      * [1,2,3,6,7,8]
-     * => [IdPack.range(start: 1 length: 3), IdPack.range(start: 6 length: 3)]
+     * => [IdPacker.range(start: 1 length: 3), IdPacker.range(start: 6 length: 3)]
      */
     convertNumbersToRanges: function (numbers) {
       var ranges = [];
       if (numbers.length > 0) {
-        var range = new IdPack.range(numbers[0], 1);
+        var range = IdPacker.range(numbers[0], 1);
         for (var i = 1; i < numbers.length; i++) {
           if (numbers[i] == numbers[i-1]+1) {
             range.length = range.length + 1;
           } else {
             ranges.push(range);
-            range = new IdPack.range(numbers[i], 1);
+            range = IdPacker.range(numbers[i], 1);
           }
         }
         ranges.push(range);
@@ -121,7 +416,7 @@
     },
 
     /**
-     * [IdPack.range(start: 1 length: 3), IdPack.range(start: 6 length: 3)]
+     * [IdPacker.range(start: 1 length: 3), IdPacker.range(start: 6 length: 3)]
      * => "11100111"
      */
     convertRangesToBinaryNumber: function (ranges) {
